@@ -1,0 +1,26 @@
+{
+    "name": "super-glup",
+    "version": "1.0.0",
+    "main": "index.js",
+    "author": "wzc0x0@gmail.com",
+    "license": "MIT",
+    "scripts": {
+        "dev": "gulp",
+        "build": "gulp build"
+    },
+    "dependencies": {
+        "babel-core": "^6.26.0",
+        "babel-preset-env": "^1.6.1",
+        "browser-sync": "^2.23.6",
+        "gulp": "^3.9.1",
+        "gulp-asset-time": "^1.0.0",
+        "gulp-autoprefixer": "^5.0.0",
+        "gulp-babel": "^7.0.1",
+        "gulp-changed": "^3.2.0",
+        "gulp-clean": "^0.4.0",
+        "gulp-clean-css": "^3.9.2",
+        "gulp-htmlmin": "^4.0.0",
+        "gulp-less": "^4.0.0",
+        "gulp-uglify": "^3.0.0"
+    }
+}
