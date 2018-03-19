@@ -11,10 +11,13 @@ var gulp = require("gulp"),
     autoprefixer = require("gulp-autoprefixer"),
     changed = require("gulp-changed"),
     browserSync = require("browser-sync").create(),
+    fileinclude = require('gulp-file-include'),
     output = {
         src: "./src",
         js: "./src/js/*.js",
         less: "./src/less/*.less",
+        html: "./src/**/*.html",
+        uninclude: "!./src/include/**.html",
         dev: "./dev/",
         build: "./dist/",
         port: 2018,
@@ -26,10 +29,20 @@ gulp.task('delete', function() {
     return gulp.src(output.dev).pipe(clean())
 });
 
+gulp.task('fileinclude', function() {
+    // 适配src中所有文件夹下的所有html，排除src下的include文件夹中html
+    return gulp.src([output.html, output.uninclude])
+        .pipe(fileinclude({
+            prefix: '@@',
+            basepath: '@file'
+        }))
+        .pipe(gulp.dest(output.dev));
+});
+
 
 //copy all src with no need for less、sass、css、js...
 gulp.task('copy', function() {
-    return gulp.src([`${output.src}/**/*.*`, `!${output.js}`, `!${output.less}`])
+    return gulp.src([`${output.src}/**/*.*`, `!${output.js}`, `!${output.less}`, `!${output.html}`])
         .pipe(changed(output.dev, { hasChanged: changed.compareSha1Digest }))
         .pipe(gulp.dest(output.dev))
         .pipe(browserSync.reload({ stream: true }));
@@ -59,19 +72,19 @@ gulp.task('less', function() {
 });
 
 gulp.task('default', ['delete'], function() {
-    gulp.start('less', 'script', 'copy');
+    gulp.start('less', 'script', 'copy', 'fileinclude');
     browserSync.init({
         port: output.port,
         server: { baseDir: [output.dev] }
     });
-    gulp.watch([`${output.src}/**/*.*`, `!${output.js}`, `!${output.less}`], ["copy"]);
-    gulp.watch(output.less, ['less']);
-    gulp.watch(output.js, ['script']);
+    gulp.watch([`${output.src}/**/*.*`, `!${output.js}`, `!${output.less}`], ["copy", "fileinclude"]);
+    gulp.watch(output.less, ["less"]);
+    gulp.watch(output.js, ["script"]);
 });
 
 /**
  production mode will copy ./dev to ./dist
- optimize & compress html、js、css
+ optimize & compress html、js、css、images
  add assets timestamp
  *
 */
@@ -80,6 +93,7 @@ var htmlmin = require("gulp-htmlmin"),
     jsmin = require("gulp-uglify"),
     cssmin = require("gulp-clean-css"),
     assetRev = require("gulp-asset-time"),
+    image = require('gulp-image'),
     options = {
         removeComments: true, //清除HTML注释
         collapseWhitespace: true, //压缩HTML
@@ -97,7 +111,7 @@ gulp.task("del-build", function() {
 })
 
 
-gulp.task("copy-to-build", ["less", "script", "copy", "del-build"], function() {
+gulp.task("copy-to-build", ["less", "script", "del-build", "copy", "fileinclude"], function() {
     return gulp.src(`${output.dev}**`).pipe(gulp.dest(output.build));
 });
 
@@ -122,7 +136,12 @@ gulp.task('js-min', function() {
         .pipe(gulp.dest(`${output.build}js`))
 })
 
+gulp.task('img-min', function() {
+    gulp.src(`${output.build}img/**/*.*`)
+        .pipe(image())
+        .pipe(gulp.dest(`${output.build}img`));
+});
 
 gulp.task('build', ['copy-to-build'], function() {
-    gulp.start('html-rev', 'css-rev', 'js-min')
+    gulp.start("html-rev", "css-rev", "js-min", "img-min");
 })
